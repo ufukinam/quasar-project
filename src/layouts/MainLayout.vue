@@ -1,16 +1,11 @@
 <template>
   <q-layout view="hHh LpR lff">
-
     <Header />
-
     <LeftSideBar />
-
     <RightSideBar />
-
     <q-page-container>
       <router-view />
     </q-page-container>
-
     <Footer />
   </q-layout>
 </template>
