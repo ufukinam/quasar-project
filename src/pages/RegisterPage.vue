@@ -6,13 +6,15 @@
       <q-card>
         <q-form @submit="onSubmit">
           <q-card-section>
-            <q-input filled v-model="name" label="name" placeholder="John Smith" class="q-mb-md" lazy-rules
-              :rules="[((val) => !!val || 'Please enter a password')]" />
+            <q-input filled v-model="name" label="name" placeholder="John" class="q-mb-md" lazy-rules
+              :rules="[((val) => !!val || 'Please enter a name')]" />
+            <q-input filled v-model="surname" label="surname" placeholder="Smith" class="q-mb-md" lazy-rules
+              :rules="[((val) => !!val || 'Please enter a surname')]" />
             <q-input filled v-model="email" label="email" placeholder="email@example.com" class="q-mb-md" lazy-rules
               :rules="[((val) => isValidEmail(val) || 'Please enter a valid email')]" />
             <q-input filled v-model="password" label="password" :type="isPwd ? 'password' : 'text'" class="q-mb-sm"
               lazy-rules
-              :rules="[((val) => !!val || 'Please enter a password'), (val => !(val.length <= 8) || 'Please type more than 8 characters')]">
+              :rules="[((val) => !!val || 'Please enter a password'), (val => !(val.length < 8) || 'Please type more than 8 characters')]">
               <template v-slot:append>
                 <q-icon :name="isPwd ? 'visibility_off' : 'visibility'" class="cursor-pointer"
                   @click="isPwd = !isPwd" />
@@ -37,6 +39,7 @@ const $q = useQuasar()
 const accept = ref(false)
 const isPwd = ref(true)
 const name = ref('')
+const surname = ref('')
 const email = ref('')
 const password = ref('')
 
@@ -49,7 +52,7 @@ function onSubmit () {
       message: 'You need to accept the license and terms first'
     })
   } else {
-    register(name, email, password)
+    register(name.value, surname.value, email.value, password.value)
     $q.notify({
       color: 'green-4',
       textColor: 'white',
