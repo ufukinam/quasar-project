@@ -19,40 +19,23 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useAuthStore } from 'src/stores/auth-store'
-import { useUserStore } from 'src/stores/user-store'
-import { useRouter } from 'vue-router'
 
 const { login } = useAuthStore()
-const { token } = useUserStore()
-const router = useRouter()
 
-const $q = useQuasar()
+// const $q = useQuasar()
 const rememberMe = ref(false)
 const email = ref('')
 const password = ref('')
 
 function onSubmit () {
   login(email.value, password.value)
-
-  console.log('Token: ' + token)
-  if (token !== null) {
-    $q.notify({
-      color: 'green-4',
-      textColor: 'white',
-      icon: 'cloud_done',
-      message: 'Login is success'
-    })
-    router.push('/')
-  } else {
-    $q.notify({
-      color: 'red-4',
-      textColor: 'white',
-      icon: 'cloud_done',
-      message: 'Login is failed'
-    })
-  }
 }
+/* $q.notify({
+          color: 'red-4',
+          textColor: 'white',
+          icon: 'cloud_done',
+          message: 'Login is failed'
+        }) */
 </script>

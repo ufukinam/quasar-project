@@ -8,6 +8,7 @@
         </q-avatar>
         Title
       </q-toolbar-title>
+      <q-btn flat round dense icon="logout" @click="logout" class="q-mr-xs" />
       <q-btn dense flat round icon="menu" @click="toggleRight" />
     </q-toolbar>
   </q-header>
@@ -15,6 +16,9 @@
 
 <script setup>
 import { usePageStateStore } from 'src/stores/page-state-store'
+import { useAuthStore } from 'src/stores/auth-store'
+
 const { toggleLeft, toggleRight } = usePageStateStore()
+const { logout } = useAuthStore()
 
 </script>

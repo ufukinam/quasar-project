@@ -11,7 +11,7 @@
               {{ menuItem.label }}
             </q-item-section>
           </q-item>
-          <q-separator :key="'sep' + index" v-if="menuItem.separator" />
+          <!-- <q-separator :key="'sep' + index" v-if="menuItem.separator" /> -->
         </template>
       </q-list>
     </q-scroll-area>
@@ -21,44 +21,13 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { usePageStateStore } from 'src/stores/page-state-store'
+import { usePagesStore } from 'src/stores/pages-store'
 const { leftSideBarOpen } = storeToRefs(usePageStateStore())
+const { fetchPages, menuPages } = usePagesStore()
 
-const menuList = [
-  {
-    icon: 'inbox',
-    label: 'Inbox',
-    separator: true
-  },
-  {
-    icon: 'send',
-    label: 'Outbox',
-    separator: false
-  },
-  {
-    icon: 'delete',
-    label: 'Trash',
-    separator: false
-  },
-  {
-    icon: 'error',
-    label: 'Spam',
-    separator: true
-  },
-  {
-    icon: 'settings',
-    label: 'Settings',
-    separator: false
-  },
-  {
-    icon: 'feedback',
-    label: 'Send Feedback',
-    separator: false
-  },
-  {
-    icon: 'help',
-    iconColor: 'primary',
-    label: 'Help',
-    separator: false
-  }
-]
+if (menuPages == null) fetchPages()
+
+console.log(menuPages)
+const menuList = menuPages
+
 </script>

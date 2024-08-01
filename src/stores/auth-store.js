@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { useUserStore } from './user-store'
+import { post } from '../utilty/api'
 
 export const useAuthStore = defineStore({
   id: 'auth',
@@ -11,62 +11,38 @@ export const useAuthStore = defineStore({
   }),
   actions: {
     async register (rName, rSurname, rEmail, rPassword) {
-      const userStore = useUserStore()
       try {
-        // await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password })
-        axios.post('http://localhost:5264/api/auth/register', {
+        const data = await post('/Auth/register', {
           name: rName,
           surname: rSurname,
           email: rEmail,
           password: rPassword
-        }).then(RESPONSE => {
-          const token = RESPONSE.data.token
-          const user = RESPONSE.data.user
-          this.user = user
-          userStore.storeLoggedInUser(token, user)
-          // alert(RESPONSE.data.message)
-        }).catch(ERROR => {
-          console.log(ERROR)
-          alert(ERROR.message)
-        }).finally(() => {
-          this.submitting = false
         })
-
-        // store user details and jwt in local storage to keep user logged in between page refreshes
-        localStorage.setItem('user', JSON.stringify(this.user))
+        const userStore = useUserStore()
+        userStore.storeLoggedInUser(data.token, data.user)
+        this.router.push('/')
       } catch (error) {
+        console.error(error)
       }
     },
     async login (loginMail, loginPassword) {
-      const userStore = useUserStore()
       try {
-        axios.post('http://localhost:5264/api/Auth/login', {
+        const data = await post('/Auth/login', {
           email: loginMail,
           password: loginPassword
-        }).then(RESPONSE => {
-          console.log(RESPONSE)
-          const token = RESPONSE.data.token
-          const user = RESPONSE.data.user
-          userStore.storeLoggedInUser(token, user)
-        }).catch(ERROR => {
-          // console.log(ERROR)
-          alert(ERROR.message)
-        }).finally(() => {
-          this.submitting = false
         })
-        console.log(userStore.token)
-        // redirect to previous url or default to home page
-        // Router.push(this.returnUrl || '/')
+        const userStore = useUserStore()
+        userStore.storeLoggedInUser(data.token, data.user)
+        this.router.push('/')
       } catch (error) {
-        // const alertStore = useAlertStore()
-        console.log(error)
+        console.error(error)
       }
     },
     logout () {
       this.user = null
       localStorage.removeItem('user')
       localStorage.removeItem('token')
-      // Router.push('/auth/login')
+      this.router.push('/auth/login')
     }
   }
 })
