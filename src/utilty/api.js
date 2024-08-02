@@ -1,13 +1,23 @@
 import axios from 'axios'
 import { useUserStore } from '../stores/user-store'
-const userStore = useUserStore()
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:5264/api', // Base URL for your API
   headers: {
-    'Content-Type': 'application/json',
-    Authorization: 'Bearer ' + userStore.token || ''
+    'Content-Type': 'application/json'
   }
+})
+
+// Request interceptor to add the Authorization header
+apiClient.interceptors.request.use(config => {
+  const userStore = useUserStore()
+  const token = userStore.token
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+}, error => {
+  return Promise.reject(error)
 })
 
 export const get = async (url, params = {}) => {

@@ -3,14 +3,12 @@ import { get, post, put, del } from '../utilty/api'
 
 export const usePagesStore = defineStore('pages', {
   state: () => ({
-    pages: [],
-    menuPages: null || localStorage.getItem('menuItems')
+    pages: []
   }),
   actions: {
     async fetchPages () {
       try {
         this.pages = await get('/Pages')
-        localStorage.setItem('menuItems', this.pages)
       } catch (error) {
         console.error(error)
       }

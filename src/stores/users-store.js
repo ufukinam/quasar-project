@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { get, put, del } from '../utilty/api'
+import { get, put, del, post } from '../utilty/api'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
@@ -9,6 +9,15 @@ export const useUsersStore = defineStore('users', {
     async fetchUsers () {
       try {
         this.users = await get('/Users')
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async insertUser (userData) {
+      try {
+        console.log('userData: ' + JSON.stringify(userData))
+        const insertedUser = await post('/Users', userData)
+        this.users = [insertedUser, ...this.users]
       } catch (error) {
         console.error(error)
       }
@@ -26,7 +35,7 @@ export const useUsersStore = defineStore('users', {
     async deleteUser (userId) {
       try {
         await del(`/Users/${userId}`)
-        this.users = this.users.filter(user => user.id !== userId)
+        this.users.filter(user => user.id !== userId)
       } catch (error) {
         console.error(error)
       }
