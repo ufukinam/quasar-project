@@ -15,7 +15,6 @@ export const useUsersStore = defineStore('users', {
     },
     async insertUser (userData) {
       try {
-        console.log('userData: ' + JSON.stringify(userData))
         const insertedUser = await post('/Users', userData)
         this.users = [insertedUser, ...this.users]
       } catch (error) {
@@ -24,6 +23,7 @@ export const useUsersStore = defineStore('users', {
     },
     async updateUser (userId, userData) {
       try {
+        if (userData.password === undefined) { userData.password = '' }
         const updatedUser = await put(`/Users/${userId}`, userData)
         this.users = this.users.map(user =>
           user.id === userId ? updatedUser : user

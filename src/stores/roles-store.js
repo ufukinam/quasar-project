@@ -16,7 +16,7 @@ export const useRolesStore = defineStore('roles', {
     async insertRole (roleData) {
       try {
         const insertedRole = await post('/Roles', roleData)
-        this.roles = this.roles.push(insertedRole)
+        this.roles = [insertedRole, ...this.users]
       } catch (error) {
         console.error(error)
       }

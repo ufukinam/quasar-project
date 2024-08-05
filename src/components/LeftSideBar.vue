@@ -1,9 +1,22 @@
 <template>
-  <q-drawer show-if-above v-model="leftSideBarOpen" side="left" bordered>
+  <q-drawer
+    show-if-above
+    v-model="leftSideBarOpen"
+    side="left"
+    bordered
+  >
     <q-scroll-area class="fit">
       <q-list>
-        <template v-for="(menuItem, index) in filteredMenuItems" :key="index">
-          <q-item clickable :to="menuItem.url" :active="menuItem.label === 'Outbox'" v-ripple>
+        <template
+          v-for="(menuItem, index) in filteredMenuItems"
+          :key="index"
+        >
+          <q-item
+            clickable
+            :to="menuItem.url"
+            :active="menuItem.label === 'Outbox'"
+            v-ripple
+          >
             <q-item-section avatar>
               <q-icon :name="menuItem.icon" />
             </q-item-section>

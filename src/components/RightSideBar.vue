@@ -1,5 +1,10 @@
 <template>
-  <q-drawer v-model="rightSideBarOpen" side="right" overlay bordered>
+  <q-drawer
+    v-model="rightSideBarOpen"
+    side="right"
+    overlay
+    bordered
+  >
     <!-- drawer content -->
   </q-drawer>
 </template>
