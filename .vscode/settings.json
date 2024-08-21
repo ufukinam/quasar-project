@@ -4,7 +4,7 @@
   "editor.formatOnSave": false,
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.codeActionsOnSave": [
-    
+
     "source.fixAll.eslint"
   ],
   "eslint.validate": [
@@ -15,5 +15,6 @@
   ],
   "[vue]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+  "CodeGPT.apiKey": "CodeGPT Plus Beta"
 }

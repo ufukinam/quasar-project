@@ -13,6 +13,13 @@ export const useRolesStore = defineStore('roles', {
         console.error(error)
       }
     },
+    async fetchRolesVisible () {
+      try {
+        this.roles = await get('/Roles')
+      } catch (error) {
+        console.error(error)
+      }
+    },
     async insertRole (roleData) {
       try {
         const insertedRole = await post('/Roles', roleData)
