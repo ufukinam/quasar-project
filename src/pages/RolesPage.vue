@@ -1,102 +1,26 @@
 <template>
   <div class="q-pa-md">
-    <q-table
+    <DataTable
       title="Roles"
       :rows="rows"
       :columns="columns"
-      row-key="id"
       :visible-columns="visibleColumns"
-      :filter="filter"
-    >
-      <template #top>
-        <q-btn
-          flat
-          outline
-          dense
-          color="primary"
-          label="Add New Record"
-          @click="addItem"
-        />
-        <q-space />
-        <q-input
-          v-model="filter"
-          borderless
-          dense
-          debounce="300"
-          color="primary"
-        >
-          <template #append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-        <div class="q-pa-sm q-gutter-sm">
-          <q-dialog v-model="showDialog">
-            <q-card style="width: 100%; max-width: 400px;">
-              <q-card-section>
-                <div class="text-h6">
-                  {{ editedIndex > -1 ? 'Edit role!' : 'Add new role!' }}
-                </div>
-              </q-card-section>
-              <q-card-section>
-                <div class="row">
-                  <q-input
-                    v-model="editedItem.name"
-                    label="Name"
-                    style="width: 100%;"
-                  />
-                </div>
-              </q-card-section>
-
-              <q-card-actions align="right">
-                <q-btn
-                  v-close-popup
-                  flat
-                  label="Cancel"
-                  color="primary"
-                  @click="closeModal"
-                />
-                <q-btn
-                  v-close-popup
-                  flat
-                  label="OK"
-                  color="primary"
-                  @click="onSaveClick"
-                />
-              </q-card-actions>
-            </q-card>
-          </q-dialog>
-        </div>
-      </template>
-      <template #body="props">
-        <q-tr :props="props">
-          <q-td
-            key="name"
-            :props="props"
-          >
-            {{ props.row.name }}
-          </q-td>
-          <q-td
-            key="actions"
-            :props="props"
-          >
-            <q-btn
-              icon="mode_edit"
-              color="blue"
-              label="update"
-              size="sm"
-              @click="editItem(props.row)"
-            />
-            <q-btn
-              icon="delete"
-              color="red"
-              label="delete"
-              size="sm"
-              @click="deleteItem(props.row)"
-            />
-          </q-td>
-        </q-tr>
-      </template>
-    </q-table>
+      :actions="tableActions"
+      @action="handleAction"
+    />
+    <div class="q-pa-sm q-gutter-sm">
+      <DialogForm
+        title="Role"
+        :show="showDialog"
+        :columns="columns"
+        :edited-item="editedItem"
+        :edited-index="editedIndex"
+        add-new-title="Add New Role"
+        update-title="Update Role"
+        @save-click="onSaveClick"
+        @close-click="closeModal"
+      />
+    </div>
   </div>
 </template>
 
@@ -104,17 +28,11 @@
 import { onMounted, computed, ref } from 'vue'
 import { useRolesStore } from 'src/stores/roles-store'
 import { useQuasar } from 'quasar'
+import DialogForm from 'src/components/Elements/DialogForm.vue'
+import DataTable from 'src/components/Elements/DataTable.vue'
 
 const $q = useQuasar()
 const rolesStore = useRolesStore()
-const filter = ref('')
-
-onMounted(() => {
-  rolesStore.fetchRoles()
-})
-const rows = computed(() => {
-  return rolesStore.roles
-})
 
 const showDialog = ref(false)
 const editedIndex = ref(-1)
@@ -126,16 +44,40 @@ const defaultItem = {
   name: ''
 }
 
+onMounted(() => {
+  rolesStore.fetchRoles()
+})
+
+const rows = computed(() => rolesStore.roles)
+
 const columns = [
   { name: 'id', align: 'center', field: 'id', sortable: false },
-  { name: 'name', align: 'left', label: 'Name', field: 'name', sortable: true },
-  { name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: true }
+  { name: 'name', align: 'left', label: 'Name', field: 'name', sortable: true, type: 'text', model: 'input' },
+  { name: 'actions', align: 'right', label: 'Actions', field: 'actions' }
+]
+const tableActions = [
+  { type: 'add', icon: 'add', label: 'Add Role' },
+  { type: 'edit', icon: 'edit', label: 'Edit Role' },
+  { type: 'delete', icon: 'delete', label: 'Delete Role' }
 ]
 
 const visibleColumns = ref(['name', 'actions'])
 
-function onSaveClick () {
-  console.log('add: ' + editedIndex.value)
+function handleAction ({ type, item }) {
+  switch (type) {
+    case 'add':
+      addItem()
+      break
+    case 'edit':
+      editItem(item)
+      break
+    case 'delete':
+      deleteItem(item)
+      break
+  }
+}
+
+function onSaveClick (item) {
   if (editedIndex.value > -1) {
     rolesStore.updateRole(editedItem.value.id, editedItem.value)
       .then(x => {
@@ -151,13 +93,13 @@ function onSaveClick () {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
-          message: err
+          icon: 'warning',
+          message: err.message
         })
       })
   } else {
-    rolesStore.insertRole(editedItem.value)
-      .then(x => {
+    rolesStore.insertRole(item)
+      .then(() => {
         rolesStore.fetchRoles()
         $q.notify({
           color: 'green-4',
@@ -170,7 +112,7 @@ function onSaveClick () {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
+          icon: 'warning',
           message: err.message
         })
       })
@@ -188,10 +130,11 @@ function editItem (item) {
   editedItem.value = Object.assign({}, item)
   showDialog.value = true
 }
+
 function deleteItem (item) {
-  confirm('Are you sure you want to delete this item?') &&
-    (rolesStore.deleteRole(item.id)
-      .then(x => {
+  confirm('Are you sure you want to delete this role?') &&
+    rolesStore.deleteRole(item.id)
+      .then(() => {
         rolesStore.fetchRoles()
         $q.notify({
           color: 'green-4',
@@ -204,10 +147,10 @@ function deleteItem (item) {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
+          icon: 'warning',
           message: err.message
         })
-      }))
+      })
 }
 function closeModal () {
   showDialog.value = false
@@ -216,5 +159,4 @@ function closeModal () {
     editedIndex.value = -1
   }, 300)
 }
-
 </script>

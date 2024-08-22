@@ -1,22 +1,22 @@
 <template>
   <div class="q-pa-md">
     <DataTable
-      title="Page"
+      title="Pages"
       :rows="rows"
       :columns="columns"
       :visible-columns="visibleColumns"
-      :show-actions="true"
-      @add-item="addItem"
-      @edit-item="editItem"
-      @delete-item="deleteItem"
+      :actions="tableActions"
+      @action="handleAction"
     />
     <div class="q-pa-sm q-gutter-sm">
       <DialogForm
         title="Page"
-        :show="shStat"
+        :show="showDialog"
         :columns="columns"
         :edited-item="editedItem"
         :edited-index="editedIndex"
+        add-new-title="Add New Page"
+        update-title="Update Page"
         @save-click="onSaveClick"
         @close-click="closeModal"
       />
@@ -41,14 +41,14 @@ const editedItem = ref({
   name: '',
   order: 0,
   url: '',
-  Icon: '',
+  icon: '',
   label: ''
 })
 const defaultItem = {
   name: '',
   order: 0,
   url: '',
-  Icon: '',
+  icon: '',
   label: ''
 }
 
@@ -57,7 +57,6 @@ onMounted(() => {
 })
 
 const rows = computed(() => pagesStore.pages)
-const shStat = computed(() => showDialog.value)
 
 const columns = [
   { name: 'id', align: 'center', field: 'id', sortable: false },
@@ -71,10 +70,30 @@ const columns = [
 
 const visibleColumns = ref(['name', 'order', 'url', 'icon', 'label', 'actions'])
 
-function onSaveClick () {
+const tableActions = [
+  { type: 'add', icon: 'add', label: 'Add Page' },
+  { type: 'edit', icon: 'edit', label: 'Edit Page' },
+  { type: 'delete', icon: 'delete', label: 'Delete Page' }
+]
+
+function handleAction ({ type, item }) {
+  switch (type) {
+    case 'add':
+      addItem()
+      break
+    case 'edit':
+      editItem(item)
+      break
+    case 'delete':
+      deleteItem(item)
+      break
+  }
+}
+
+function onSaveClick (item) {
   if (editedIndex.value > -1) {
-    pagesStore.updatePage(editedItem.value.id, editedItem.value)
-      .then(x => {
+    pagesStore.updatePage(item.id, item)
+      .then(() => {
         pagesStore.fetchPages()
         $q.notify({
           color: 'green-4',
@@ -87,13 +106,13 @@ function onSaveClick () {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
-          message: err
+          icon: 'warning',
+          message: err.message
         })
       })
   } else {
-    pagesStore.insertPage(editedItem.value)
-      .then(x => {
+    pagesStore.insertPage(item)
+      .then(() => {
         pagesStore.fetchPages()
         $q.notify({
           color: 'green-4',
@@ -106,7 +125,7 @@ function onSaveClick () {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
+          icon: 'warning',
           message: err.message
         })
       })
@@ -124,10 +143,11 @@ function editItem (item) {
   editedItem.value = Object.assign({}, item)
   showDialog.value = true
 }
+
 function deleteItem (item) {
-  confirm('Are you sure you want to delete this item?') &&
-    (pagesStore.deletePage(item.id)
-      .then(x => {
+  confirm('Are you sure you want to delete this page?') &&
+    pagesStore.deletePage(item.id)
+      .then(() => {
         pagesStore.fetchPages()
         $q.notify({
           color: 'green-4',
@@ -140,10 +160,10 @@ function deleteItem (item) {
         $q.notify({
           color: 'red-4',
           textColor: 'white',
-          icon: 'cloud_done',
+          icon: 'warning',
           message: err.message
         })
-      }))
+      })
 }
 function closeModal () {
   showDialog.value = false
@@ -152,5 +172,4 @@ function closeModal () {
     editedIndex.value = -1
   }, 300)
 }
-
 </script>

@@ -5,22 +5,29 @@
       :rows="rows"
       :columns="columns"
       :visible-columns="visibleColumns"
-      :show-actions="true"
-      @add-item="addItem"
-      @edit-item="editItem"
-      @delete-item="deleteItem"
+      :actions="tableActions"
+      @action="handleAction"
     />
     <div class="q-pa-sm q-gutter-sm">
       <DialogForm
         title="User"
-        :show="shStat"
-        :columns="columns"
+        :show="showDialog"
+        :columns="columns.filter(col => col.name !== 'roles')"
         :edited-item="editedItem"
         :edited-index="editedIndex"
+        add-new-title="Add New User"
+        update-title="Update User"
         @save-click="onSaveClick"
         @close-click="closeModal"
       />
     </div>
+    <q-dialog v-model="showRolesDialog">
+      <RolesManagementDialog
+        :user="editedItem"
+        @save="onSaveRoles"
+        @cancel="showRolesDialog = false"
+      />
+    </q-dialog>
   </div>
 </template>
 
@@ -31,6 +38,7 @@ import { useRolesStore } from 'src/stores/roles-store'
 import { useQuasar } from 'quasar'
 import DialogForm from 'src/components/Elements/DialogForm.vue'
 import DataTable from 'src/components/Elements/DataTable.vue'
+import RolesManagementDialog from 'src/components/Elements/RolesManagementDialog.vue'
 
 const $q = useQuasar()
 const usersStore = useUsersStore()
@@ -54,13 +62,14 @@ const defaultItem = {
   roles: ''
 }
 
+const showRolesDialog = ref(false)
+
 onMounted(() => {
   usersStore.fetchUsers()
   rolesStore.fetchRoles()
 })
 
 const rows = computed(() => usersStore.users)
-const shStat = computed(() => showDialog.value)
 
 const columns = [
   { name: 'id', field: 'id', sortable: false },
@@ -68,16 +77,40 @@ const columns = [
   { name: 'surname', align: 'left', label: 'Surname', field: 'surname', sortable: true, type: 'text', model: 'input' },
   { name: 'email', align: 'left', label: 'E-mail', field: 'email', sortable: true, type: 'text', model: 'input' },
   { name: 'password', align: 'left', label: 'Password', field: 'password', sortable: true, type: 'password', model: 'input' },
+  { name: 'roles', align: 'left', label: 'Roles', field: 'roles', sortable: true, type: 'text' },
   { name: 'actions', align: 'right', label: 'Actions', field: 'actions' }
 ]
 
 const visibleColumns = ref(['name', 'surname', 'email', 'roles', 'actions'])
 
+const tableActions = [
+  { type: 'manage-roles', icon: 'people', label: 'Manage Roles' },
+  { type: 'add', icon: 'add', label: 'Add User' },
+  { type: 'edit', icon: 'edit', label: 'Edit User' },
+  { type: 'delete', icon: 'delete', label: 'Delete User' }
+]
+
+function handleAction ({ type, item }) {
+  switch (type) {
+    case 'add':
+      addItem()
+      break
+    case 'edit':
+      editItem(item)
+      break
+    case 'delete':
+      deleteItem(item)
+      break
+    case 'manage-roles':
+      manageRoles(item)
+      break
+  }
+}
+
 function onSaveClick (item) {
-  console.log('add: ' + item)
   if (editedIndex.value > -1) {
     usersStore.updateUser(item.id, item)
-      .then(x => {
+      .then(() => {
         usersStore.fetchUsers()
         $q.notify({
           color: 'green-4',
@@ -96,7 +129,7 @@ function onSaveClick (item) {
       })
   } else {
     usersStore.insertUser(item)
-      .then(x => {
+      .then(() => {
         usersStore.fetchUsers()
         $q.notify({
           color: 'green-4',
@@ -131,7 +164,7 @@ function editItem (item) {
 function deleteItem (item) {
   confirm('Are you sure you want to delete this item?') &&
     (usersStore.deleteUser(item.id)
-      .then(x => {
+      .then(() => {
         usersStore.fetchUsers()
         $q.notify({
           color: 'green-4',
@@ -155,6 +188,33 @@ function closeModal () {
     editedItem.value = Object.assign({}, defaultItem)
     editedIndex.value = -1
   }, 300)
+}
+
+function manageRoles (item) {
+  editedItem.value = Object.assign({}, item)
+  showRolesDialog.value = true
+}
+
+function onSaveRoles (updatedRoles) {
+  usersStore.updateUserRoles(editedItem.value.id, updatedRoles)
+    .then(() => {
+      usersStore.fetchUsers()
+      $q.notify({
+        color: 'green-4',
+        textColor: 'white',
+        icon: 'cloud_done',
+        message: 'User roles updated successfully'
+      })
+    })
+    .catch((err) => {
+      $q.notify({
+        color: 'red-4',
+        textColor: 'white',
+        icon: 'warning',
+        message: err.message
+      })
+    })
+  showRolesDialog.value = false
 }
 
 </script>

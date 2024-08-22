@@ -16,7 +16,7 @@ export const usePagesStore = defineStore('pages', {
     async insertPage (pageData) {
       try {
         const insertedPage = await post('/Pages', pageData)
-        this.pages = [insertedPage, ...this.users]
+        this.pages = [insertedPage, ...this.pages]
       } catch (error) {
         console.error(error)
       }

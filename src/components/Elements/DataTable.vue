@@ -1,96 +1,62 @@
 <template>
-  <q-table
-    :title="title"
-    :rows="rows"
-    :columns="columns"
-    row-key="id"
-    :visible-columns="visibleColumns"
-    :filter="filter"
-    v-model:pagination="pagination"
-    :rows-per-page-options="[10,20,50,100]"
-  >
-    <template #top>
-      <q-btn
-        flat
-        outline
-        dense
-        color="primary"
-        :label="addButtonLabel"
-        @click="$emit('add-item')"
-      />
-      <q-space />
-      <q-input
-        borderless
-        dense
-        debounce="300"
-        color="primary"
-        v-model="filterModel"
-      >
-        <template #append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-    </template>
-    <template #header="props">
-      <q-tr :props="props">
-        <q-th
-          v-for="col in visibleColumnsList"
-          :key="col.name"
-          :props="props"
-          :class="col.align ? `text-${col.align}` : ''"
+  <div>
+    <q-table
+      :title="title"
+      :rows="rows"
+      :columns="visibleColumnsList"
+      :pagination="pagination"
+      :filter="filter"
+    >
+      <template #top-left>
+        <q-btn
+          v-if="actions.some(action => action.type === 'add')"
+          color="primary"
+          :icon="actions.find(action => action.type === 'add').icon"
+          :label="actions.find(action => action.type === 'add').label"
+          @click="$emit('action', { type: 'add' })"
+        />
+      </template>
+      <template #top-right>
+        <q-input
+          v-if="showSearch"
+          dense
+          debounce="300"
+          v-model="filterModel"
+          placeholder="Search"
         >
-          {{ col.label }}
-        </q-th>
-        <q-th
-          v-if="showActions"
-          key="actions"
-          :props="props"
-          class="text-right"
-        >
-          Actions
-        </q-th>
-      </q-tr>
-    </template>
-    <template #body="props">
-      <q-tr :props="props">
+          <template #append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </template>
+
+      <template #body-cell-actions="props">
         <q-td
-          v-for="col in visibleColumnsList"
-          :key="col.name"
           :props="props"
-          :class="col.align ? `text-${col.align}` : ''"
-        >
-          {{ props.row[col.field] }}
-        </q-td>
-        <q-td
-          v-if="showActions"
-          key="actions"
-          :props="props"
-          class="text-right"
+          class="q-gutter-sm"
         >
           <q-btn
-            icon="mode_edit"
-            color="blue"
-            label="update"
-            @click="$emit('edit-item', props.row)"
-            size="sm"
-          />
-          <q-btn
-            icon="delete"
-            color="red"
-            label="delete"
-            @click="$emit('delete-item', props.row)"
-            size="sm"
-          />
+            v-for="action in actions.filter(a => a.type !== 'add')"
+            :key="action.type"
+            :icon="action.icon"
+            :color="action.color || 'primary'"
+            dense
+            round
+            flat
+            @click="$emit('action', { type: action.type, item: props.row })"
+          >
+            <q-tooltip>{{ action.label }}</q-tooltip>
+          </q-btn>
         </q-td>
-      </q-tr>
-    </template>
-  </q-table>
+      </template>
+    </q-table>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 
-const { columns, visibleColumns } = defineProps({
+const { columns, visibleColumns, showSearch, actions } = defineProps({
   title: {
     type: String,
     default: ''
@@ -107,15 +73,17 @@ const { columns, visibleColumns } = defineProps({
     type: Array,
     default: () => []
   },
-  addButtonLabel: {
-    type: String,
-    default: 'Add New Record'
-  },
-  showActions: {
+  showSearch: {
     type: Boolean,
     default: true
+  },
+  actions: {
+    type: Array,
+    default: () => []
   }
 })
+
+defineEmits(['action'])
 
 const pagination = ref({
   rowsPerPage: 20,
@@ -126,8 +94,6 @@ const filterModel = ref('')
 const filter = computed(() => filterModel.value)
 
 const visibleColumnsList = computed(() =>
-  columns.filter(c => visibleColumns.includes(c.name) && c.name !== 'actions')
+  columns.filter(c => visibleColumns.includes(c.name))
 )
-
-defineEmits(['add-item', 'edit-item', 'delete-item'])
 </script>

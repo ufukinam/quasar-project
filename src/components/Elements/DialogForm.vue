@@ -3,7 +3,7 @@
     <q-card style="width: 100%; max-width: 400px;">
       <q-card-section>
         <div class="text-h6">
-          {{ props.sendindex > -1 ? 'Edit user!' : 'Add new user!' }}
+          {{ props.editedIndex > -1 ? props.updateTitle : props.addNewTitle }}
         </div>
       </q-card-section>
       <q-card-section>
@@ -73,6 +73,14 @@ const props = defineProps({
   columns: {
     type: Array,
     default: () => []
+  },
+  addNewTitle: {
+    type: String,
+    default: 'Add new record'
+  },
+  updateTitle: {
+    type: String,
+    default: 'Edit record'
   }
 })
 
