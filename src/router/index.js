@@ -26,5 +26,17 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
+  Router.beforeEach((to, from, next) => {
+    const publicPages = ['/auth/login', '/auth/register']
+    const authRequired = !publicPages.includes(to.path)
+    const loggedIn = localStorage.getItem('token')
+
+    if (authRequired && !loggedIn) {
+      return next('/auth/login')
+    }
+
+    next()
+  })
+
   return Router
 })

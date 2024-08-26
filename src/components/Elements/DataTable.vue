@@ -6,6 +6,8 @@
       :columns="visibleColumnsList"
       :pagination="pagination"
       :filter="filter"
+      :loading="loading"
+      @request="onRequest"
     >
       <template #top-left>
         <q-btn
@@ -23,6 +25,7 @@
           debounce="300"
           v-model="filterModel"
           placeholder="Search"
+          @update:model-value="onFilterChange"
         >
           <template #append>
             <q-icon name="search" />
@@ -54,9 +57,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-const { columns, visibleColumns, showSearch, actions } = defineProps({
+const { columns, visibleColumns, showSearch, actions, serverPagination } = defineProps({
   title: {
     type: String,
     default: ''
@@ -80,18 +83,42 @@ const { columns, visibleColumns, showSearch, actions } = defineProps({
   actions: {
     type: Array,
     default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  serverPagination: {
+    type: Object,
+    default: () => ({
+      page: 1,
+      rowsPerPage: 20,
+      rowsNumber: 0
+    })
   }
 })
 
-defineEmits(['action'])
+const emit = defineEmits(['action', 'update:pagination', 'update:filter'])
 
-const pagination = ref({
-  rowsPerPage: 20,
-  page: 1
-})
-
+const pagination = ref({ ...serverPagination })
 const filterModel = ref('')
 const filter = computed(() => filterModel.value)
+
+const onRequest = (props) => {
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+  const filter = props.filter
+  emit('update:pagination', { page, rowsPerPage, sortBy, descending })
+  emit('update:filter', filter)
+}
+
+const onFilterChange = () => {
+  pagination.value.page = 1
+  onRequest({ pagination: pagination.value, filter: filterModel.value })
+}
+
+watch(() => serverPagination, (newVal) => {
+  pagination.value = { ...newVal }
+}, { deep: true })
 
 const visibleColumnsList = computed(() =>
   columns.filter(c => visibleColumns.includes(c.name))

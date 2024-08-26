@@ -13,6 +13,13 @@ export const useUsersStore = defineStore('users', {
         console.error(error)
       }
     },
+    async fetchUsersPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
+      try {
+        this.users = await get('/Users/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
+      } catch (error) {
+        console.error(error)
+      }
+    },
     async insertUser (userData) {
       try {
         const insertedUser = await post('/Users', userData)

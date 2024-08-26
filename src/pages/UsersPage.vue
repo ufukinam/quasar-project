@@ -7,6 +7,8 @@
       :visible-columns="visibleColumns"
       :actions="tableActions"
       @action="handleAction"
+      @update:pagination="fetchData"
+      @update:filter="fetchData"
     />
     <div class="q-pa-sm q-gutter-sm">
       <DialogForm
@@ -44,6 +46,7 @@ const $q = useQuasar()
 const usersStore = useUsersStore()
 const rolesStore = useRolesStore()
 
+// refs start
 const showDialog = ref(false)
 const editedIndex = ref(-1)
 const editedItem = ref({
@@ -62,14 +65,52 @@ const defaultItem = {
   roles: ''
 }
 
+const serverPagination = ref({
+  page: 1,
+  rowsPerPage: 20,
+  rowsNumber: 0
+})
+
 const showRolesDialog = ref(false)
 
+const currentFilter = ref('')
+const loading = ref(false)
+
+// refs end
+
 onMounted(() => {
-  usersStore.fetchUsers()
+  usersStore.fetchUsersPaginated(serverPagination.value.page, serverPagination.value.rowsPerPage)
   rolesStore.fetchRoles()
 })
 
 const rows = computed(() => usersStore.users)
+
+const fetchData = async (pagination = serverPagination.value, filter = currentFilter.value) => {
+  loading.value = true
+  try {
+    await usersStore.fetchUsersPaginated({
+      page: pagination.page,
+      rowsPerPage: pagination.rowsPerPage,
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
+      filter
+    })
+    serverPagination.value = {
+      ...pagination,
+      rowsNumber: usersStore.totalUsers
+    }
+    currentFilter.value = filter
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    $q.notify({
+      color: 'negative',
+      message: 'Failed to fetch users',
+      icon: 'error'
+    })
+  } finally {
+    loading.value = false
+  }
+}
 
 const columns = [
   { name: 'id', field: 'id', sortable: false },
