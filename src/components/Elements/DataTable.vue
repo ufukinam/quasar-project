@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed, toRefs } from 'vue'
 
 const propsNew = defineProps({
   title: {
@@ -137,9 +137,17 @@ const propsNew = defineProps({
 
 const emit = defineEmits(['request', 'action', 'update:pagination', 'update:filter'])
 
-const paginationModel = ref({ ...propsNew.pagination })
+const { pagination: propsPagination, filter: propsFilter } = toRefs(propsNew)
 
-const filterModel = ref(propsNew.filter)
+const paginationModel = computed({
+  get: () => ({ ...propsPagination.value }),
+  set: (newVal) => emit('update:pagination', newVal)
+})
+
+const filterModel = computed({
+  get: () => propsFilter.value,
+  set: (newVal) => emit('update:filter', newVal)
+})
 
 const onRequest = (propsNew) => {
   emit('request', propsNew)
@@ -155,22 +163,6 @@ const onPageChange = (val) => {
   paginationModel.value.page = val
   emit('request', { pagination: paginationModel.value, filter: filterModel.value })
 }
-
-watch(() => propsNew.pagination, (newVal) => {
-  paginationModel.value = { ...newVal }
-}, { deep: true })
-
-watch(paginationModel, (newVal) => {
-  emit('update:pagination', newVal)
-}, { deep: true })
-
-watch(() => propsNew.filter, (newVal) => {
-  filterModel.value = newVal
-})
-
-watch(filterModel, (newVal) => {
-  emit('update:filter', newVal)
-})
 
 const visibleColumnsList = computed(() =>
   propsNew.columns.filter(c => propsNew.visibleColumns.includes(c.name))

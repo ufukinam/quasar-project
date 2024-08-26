@@ -51,21 +51,14 @@ const rolesStore = useRolesStore()
 // refs start
 const showDialog = ref(false)
 const editedIndex = ref(-1)
-const editedItem = ref({
+const editedItem = ref(() => ({
   id: '',
   name: '',
   surname: '',
   email: '',
   password: '',
   roles: ''
-})
-const defaultItem = {
-  name: '',
-  surname: '',
-  email: '',
-  password: '',
-  roles: ''
-}
+}))
 
 const serverPagination = ref({
   page: 1,
@@ -140,77 +133,45 @@ const tableActions = [
   { type: 'delete', icon: 'delete', label: 'Delete User' }
 ]
 
+const actionHandlers = {
+  add: addItem,
+  edit: editItem,
+  delete: deleteItem,
+  'manage-roles': manageRoles
+}
+
 function handleAction ({ type, item }) {
-  switch (type) {
-    case 'add':
-      addItem()
-      break
-    case 'edit':
-      editItem(item)
-      break
-    case 'delete':
-      deleteItem(item)
-      break
-    case 'manage-roles':
-      manageRoles(item)
-      break
-  }
+  const handler = actionHandlers[type]
+  if (handler) handler(item)
 }
 
 function onSaveClick (item) {
-  if (editedIndex.value > -1) {
-    usersStore.updateUser(item.id, item)
-      .then(() => {
-        usersStore.fetchUsers()
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: 'User updated successfully'
-        })
-      })
-      .catch((err) => {
-        $q.notify({
-          color: 'red-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: err
-        })
-      })
-  } else {
-    usersStore.insertUser(item)
-      .then(() => {
-        usersStore.fetchUsers()
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: 'User created successfully'
-        })
-      })
-      .catch((err) => {
-        $q.notify({
-          color: 'red-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: err.message
-        })
-      })
-  }
+  const action = editedIndex.value > -1 ? 'updateUser' : 'insertUser'
+  const successMessage = `User ${editedIndex.value > -1 ? 'updated' : 'created'} successfully`
+
+  usersStore[action](item.id, item)
+    .then(() => {
+      usersStore.fetchUsers()
+      notify('green-4', successMessage)
+    })
+    .catch((err) => {
+      notify('red-4', err.message)
+    })
   closeModal()
 }
 
 function addItem () {
-  editedItem.value = Object.assign({}, defaultItem)
+  editedItem.value = createDefaultItem()
   editedIndex.value = -1
   showDialog.value = true
 }
 
 function editItem (item) {
   editedIndex.value = usersStore.users.indexOf(item)
-  editedItem.value = Object.assign({}, item)
+  editedItem.value = { ...item }
   showDialog.value = true
 }
+
 function deleteItem (item) {
   confirm('Are you sure you want to delete this item?') &&
     (usersStore.deleteUser(item.id)
@@ -232,10 +193,11 @@ function deleteItem (item) {
         })
       }))
 }
+
 function closeModal () {
   showDialog.value = false
   setTimeout(() => {
-    editedItem.value = Object.assign({}, defaultItem)
+    editedItem.value = createDefaultItem()
     editedIndex.value = -1
   }, 300)
 }
@@ -266,5 +228,23 @@ function onSaveRoles (updatedRoles) {
     })
   showRolesDialog.value = false
 }
+
+const notify = (color, message) => {
+  $q.notify({
+    color,
+    textColor: 'white',
+    icon: color === 'green-4' ? 'cloud_done' : 'warning',
+    message
+  })
+}
+
+const createDefaultItem = () => ({
+  id: '',
+  name: '',
+  surname: '',
+  email: '',
+  password: '',
+  roles: ''
+})
 
 </script>
