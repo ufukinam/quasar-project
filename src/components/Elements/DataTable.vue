@@ -4,10 +4,11 @@
       :title="title"
       :rows="rows"
       :columns="visibleColumnsList"
-      :pagination="pagination"
-      :filter="filter"
+      :pagination="paginationModel"
+      :filter="filterModel"
       :loading="loading"
       @request="onRequest"
+      row-key="id"
     >
       <template #top-left>
         <q-btn
@@ -25,7 +26,6 @@
           debounce="300"
           v-model="filterModel"
           placeholder="Search"
-          @update:model-value="onFilterChange"
         >
           <template #append>
             <q-icon name="search" />
@@ -52,6 +52,37 @@
           </q-btn>
         </q-td>
       </template>
+
+      <template #bottom>
+        <div class="row items-center justify-between full-width">
+          <div class="col-auto">
+            <q-select
+              v-model="paginationModel.rowsPerPage"
+              :options="[5, 10, 20, 50, 100]"
+              label="Rows per page"
+              style="min-width: 100px"
+              dense
+              options-dense
+              emit-value
+              map-options
+              @update:model-value="onRowsPerPageChange"
+            />
+          </div>
+          <div class="col-auto">
+            <q-pagination
+              v-model="paginationModel.page"
+              :max="Math.ceil(paginationModel.rowsNumber / paginationModel.rowsPerPage)"
+              :max-pages="6"
+              boundary-links
+              @update:model-value="onPageChange"
+            />
+          </div>
+          <div class="col-auto text-caption q-mr-sm">
+            Page {{ paginationModel.page }} of {{ Math.ceil(paginationModel.rowsNumber / paginationModel.rowsPerPage) }} |
+            Total: {{ paginationModel.rowsNumber }}
+          </div>
+        </div>
+      </template>
     </q-table>
   </div>
 </template>
@@ -59,7 +90,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
-const { columns, visibleColumns, showSearch, actions, serverPagination } = defineProps({
+const propsNew = defineProps({
   title: {
     type: String,
     default: ''
@@ -88,39 +119,60 @@ const { columns, visibleColumns, showSearch, actions, serverPagination } = defin
     type: Boolean,
     default: false
   },
-  serverPagination: {
+  pagination: {
     type: Object,
     default: () => ({
       page: 1,
-      rowsPerPage: 20,
-      rowsNumber: 0
+      rowsPerPage: 10,
+      rowsNumber: 0,
+      sortBy: null,
+      descending: false
     })
+  },
+  filter: {
+    type: String,
+    default: ''
   }
 })
 
-const emit = defineEmits(['action', 'update:pagination', 'update:filter'])
+const emit = defineEmits(['request', 'action', 'update:pagination', 'update:filter'])
 
-const pagination = ref({ ...serverPagination })
-const filterModel = ref('')
-const filter = computed(() => filterModel.value)
+const paginationModel = ref({ ...propsNew.pagination })
 
-const onRequest = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination
-  const filter = props.filter
-  emit('update:pagination', { page, rowsPerPage, sortBy, descending })
-  emit('update:filter', filter)
+const filterModel = ref(propsNew.filter)
+
+const onRequest = (propsNew) => {
+  emit('request', propsNew)
 }
 
-const onFilterChange = () => {
-  pagination.value.page = 1
-  onRequest({ pagination: pagination.value, filter: filterModel.value })
+const onRowsPerPageChange = (val) => {
+  paginationModel.value.rowsPerPage = val
+  paginationModel.value.page = 1
+  emit('request', { pagination: paginationModel.value, filter: filterModel.value })
 }
 
-watch(() => serverPagination, (newVal) => {
-  pagination.value = { ...newVal }
+const onPageChange = (val) => {
+  paginationModel.value.page = val
+  emit('request', { pagination: paginationModel.value, filter: filterModel.value })
+}
+
+watch(() => propsNew.pagination, (newVal) => {
+  paginationModel.value = { ...newVal }
 }, { deep: true })
 
+watch(paginationModel, (newVal) => {
+  emit('update:pagination', newVal)
+}, { deep: true })
+
+watch(() => propsNew.filter, (newVal) => {
+  filterModel.value = newVal
+})
+
+watch(filterModel, (newVal) => {
+  emit('update:filter', newVal)
+})
+
 const visibleColumnsList = computed(() =>
-  columns.filter(c => visibleColumns.includes(c.name))
+  propsNew.columns.filter(c => propsNew.visibleColumns.includes(c.name))
 )
 </script>

@@ -3,7 +3,11 @@ import { get, put, del, post } from '../utilty/api'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
-    users: []
+    users: [],
+    totalItems: 0,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0
   }),
   actions: {
     async fetchUsers () {
@@ -15,7 +19,12 @@ export const useUsersStore = defineStore('users', {
     },
     async fetchUsersPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
       try {
-        this.users = await get('/Users/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
+        const response = await get('/Users/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
+        this.users = response.items
+        this.totalItems = response.totalItems
+        this.page = response.page
+        this.pageSize = response.pageSize
+        this.totalPages = response.potalPages
       } catch (error) {
         console.error(error)
       }

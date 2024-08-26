@@ -6,9 +6,11 @@
       :columns="columns"
       :visible-columns="visibleColumns"
       :actions="tableActions"
+      v-model:pagination="serverPagination"
+      :loading="loading"
+      :filter="filter"
+      @request="fetchData"
       @action="handleAction"
-      @update:pagination="fetchData"
-      @update:filter="fetchData"
     />
     <div class="q-pa-sm q-gutter-sm">
       <DialogForm
@@ -67,39 +69,46 @@ const defaultItem = {
 
 const serverPagination = ref({
   page: 1,
-  rowsPerPage: 20,
-  rowsNumber: 0
+  rowsPerPage: 10,
+  rowsNumber: 0,
+  sortBy: 'id',
+  descending: false
 })
 
 const showRolesDialog = ref(false)
 
-const currentFilter = ref('')
+const filter = ref('')
+
 const loading = ref(false)
 
 // refs end
 
 onMounted(() => {
-  usersStore.fetchUsersPaginated(serverPagination.value.page, serverPagination.value.rowsPerPage)
+  fetchData({ pagination: serverPagination.value, filter: filter.value })
   rolesStore.fetchRoles()
 })
 
-const rows = computed(() => usersStore.users)
+const rows = computed(() => usersStore.users || [])
 
-const fetchData = async (pagination = serverPagination.value, filter = currentFilter.value) => {
+const fetchData = async (props) => {
+  const { pagination, filter } = props || {}
   loading.value = true
   try {
     await usersStore.fetchUsersPaginated({
-      page: pagination.page,
-      rowsPerPage: pagination.rowsPerPage,
-      sortBy: pagination.sortBy,
-      descending: pagination.descending,
-      filter
+      page: pagination?.page || serverPagination.value.page,
+      rowsPerPage: pagination?.rowsPerPage || serverPagination.value.rowsPerPage,
+      sortBy: pagination?.sortBy || serverPagination.value.sortBy,
+      descending: pagination?.descending || serverPagination.value.descending,
+      filter: filter || ''
     })
     serverPagination.value = {
-      ...pagination,
-      rowsNumber: usersStore.totalUsers
+      ...serverPagination.value,
+      page: usersStore.page,
+      rowsPerPage: usersStore.pageSize,
+      rowsNumber: usersStore.totalItems,
+      sortBy: pagination?.sortBy || serverPagination.value.sortBy,
+      descending: pagination?.descending || serverPagination.value.descending
     }
-    currentFilter.value = filter
   } catch (error) {
     console.error('Error fetching users:', error)
     $q.notify({
