@@ -48,18 +48,20 @@ const $q = useQuasar()
 const usersStore = useUsersStore()
 const rolesStore = useRolesStore()
 
-// refs start
-const showDialog = ref(false)
-const editedIndex = ref(-1)
-const editedItem = ref(() => ({
+// Use a factory function for defaultItem
+const createDefaultItem = () => ({
   id: '',
   name: '',
   surname: '',
   email: '',
   password: '',
-  roles: ''
-}))
+  roles: []
+})
 
+// Use ref for editedItem and showDialog
+const showDialog = ref(false)
+const editedIndex = ref(-1)
+const editedItem = ref(createDefaultItem())
 const serverPagination = ref({
   page: 1,
   rowsPerPage: 10,
@@ -145,19 +147,36 @@ function handleAction ({ type, item }) {
   if (handler) handler(item)
 }
 
-function onSaveClick (item) {
-  const action = editedIndex.value > -1 ? 'updateUser' : 'insertUser'
-  const successMessage = `User ${editedIndex.value > -1 ? 'updated' : 'created'} successfully`
+function onSaveClick () {
+  const isNewUser = editedIndex.value === -1
+  const successMessage = `User ${isNewUser ? 'created' : 'updated'} successfully`
 
-  usersStore[action](item.id, item)
+  const userToSave = { ...editedItem.value }
+
+  if (isNewUser) {
+    delete userToSave.id
+  }
+
+  // Remove empty fields to avoid overwriting with empty values
+  Object.keys(userToSave).forEach(key => {
+    if (userToSave[key] === '' || userToSave[key] === null) {
+      delete userToSave[key]
+    }
+  })
+
+  const savePromise = isNewUser
+    ? usersStore.insertUser(userToSave)
+    : usersStore.updateUser(userToSave.id, userToSave)
+
+  savePromise
     .then(() => {
-      usersStore.fetchUsers()
+      fetchData({ pagination: serverPagination.value, filter: filter.value })
       notify('green-4', successMessage)
+      closeModal()
     })
     .catch((err) => {
       notify('red-4', err.message)
     })
-  closeModal()
 }
 
 function addItem () {
@@ -237,14 +256,5 @@ const notify = (color, message) => {
     message
   })
 }
-
-const createDefaultItem = () => ({
-  id: '',
-  name: '',
-  surname: '',
-  email: '',
-  password: '',
-  roles: ''
-})
 
 </script>
