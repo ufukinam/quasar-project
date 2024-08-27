@@ -9,6 +9,8 @@
       :loading="loading"
       @request="onRequest"
       row-key="id"
+      binary-state-sort
+      @update:pagination="onPaginationUpdate"
     >
       <template #top-left>
         <q-btn
@@ -28,6 +30,10 @@
           placeholder="Search"
         >
           <template #append>
+            <q-icon
+              name="clear"
+              @click="filterModel = ''"
+            />
             <q-icon name="search" />
           </template>
         </q-input>
@@ -125,7 +131,7 @@ const propsNew = defineProps({
       page: 1,
       rowsPerPage: 10,
       rowsNumber: 0,
-      sortBy: null,
+      sortBy: 'id',
       descending: false
     })
   },
@@ -146,11 +152,30 @@ const paginationModel = computed({
 
 const filterModel = computed({
   get: () => propsFilter.value,
-  set: (newVal) => emit('update:filter', newVal)
+  set: (newVal) => {
+    paginationModel.value.page = 1
+    emit('update:filter', newVal)
+    emit('request', { pagination: paginationModel.value, filter: newVal }) // Ensure request is emitted on filter change
+  }
 })
 
 const onRequest = (propsNew) => {
-  emit('request', propsNew)
+  console.log('onRequest called:', propsNew)
+  const { pagination, filter } = propsNew
+
+  // Update pagination model
+  paginationModel.value = { ...pagination }
+  // Update filter if it has changed
+  if (filter !== undefined && filter !== filterModel.value) {
+    emit('update:filter', filter)
+  } else {
+    paginationModel.value.descending = pagination.descending
+    paginationModel.value.sortBy = pagination.sortBy
+  }
+
+  // Emit the request event with updated pagination and filter
+  emit('request', { pagination: paginationModel.value, filter: filterModel.value })
+  // emit('request', propsNew)
 }
 
 const onRowsPerPageChange = (val) => {
@@ -167,4 +192,11 @@ const onPageChange = (val) => {
 const visibleColumnsList = computed(() =>
   propsNew.columns.filter(c => propsNew.visibleColumns.includes(c.name))
 )
+
+const onPaginationUpdate = (newPagination) => {
+  console.log('onPaginationUpdate called:', newPagination)
+  paginationModel.value = newPagination
+  emit('request', { pagination: paginationModel.value, filter: filterModel.value })
+}
+
 </script>

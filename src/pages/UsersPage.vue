@@ -7,8 +7,8 @@
       :visible-columns="visibleColumns"
       :actions="tableActions"
       v-model:pagination="serverPagination"
+      v-model:filter="filter"
       :loading="loading"
-      :filter="filter"
       @request="fetchData"
       @action="handleAction"
     />
@@ -71,9 +71,7 @@ const serverPagination = ref({
 })
 
 const showRolesDialog = ref(false)
-
 const filter = ref('')
-
 const loading = ref(false)
 
 // refs end
@@ -94,7 +92,7 @@ const fetchData = async (props) => {
       rowsPerPage: pagination?.rowsPerPage || serverPagination.value.rowsPerPage,
       sortBy: pagination?.sortBy || serverPagination.value.sortBy,
       descending: pagination?.descending || serverPagination.value.descending,
-      filter: filter || ''
+      filter: filter || '' // Ensure filter is used
     })
     serverPagination.value = {
       ...serverPagination.value,
@@ -105,25 +103,20 @@ const fetchData = async (props) => {
       descending: pagination?.descending || serverPagination.value.descending
     }
   } catch (error) {
-    console.error('Error fetching users:', error)
-    $q.notify({
-      color: 'negative',
-      message: 'Failed to fetch users',
-      icon: 'error'
-    })
+    notify('negative', 'Failed to fetch users')
   } finally {
     loading.value = false
   }
 }
 
 const columns = [
-  { name: 'id', field: 'id', sortable: false },
+  { name: 'id', field: 'id', sortable: true },
   { name: 'name', align: 'left', label: 'Name', field: 'name', sortable: true, type: 'text', model: 'input' },
   { name: 'surname', align: 'left', label: 'Surname', field: 'surname', sortable: true, type: 'text', model: 'input' },
   { name: 'email', align: 'left', label: 'E-mail', field: 'email', sortable: true, type: 'text', model: 'input' },
-  { name: 'password', align: 'left', label: 'Password', field: 'password', sortable: true, type: 'password', model: 'input' },
-  { name: 'roles', align: 'left', label: 'Roles', field: 'roles', sortable: true, type: 'text' },
-  { name: 'actions', align: 'right', label: 'Actions', field: 'actions' }
+  { name: 'password', align: 'left', label: 'Password', field: 'password', sortable: false, type: 'password', model: 'input' },
+  { name: 'roles', align: 'left', label: 'Roles', field: 'roles', sortable: false, type: 'text' },
+  { name: 'actions', align: 'right', label: 'Actions', field: 'actions', sortable: false }
 ]
 
 const visibleColumns = ref(['name', 'surname', 'email', 'roles', 'actions'])
@@ -171,11 +164,11 @@ function onSaveClick () {
   savePromise
     .then(() => {
       fetchData({ pagination: serverPagination.value, filter: filter.value })
-      notify('green-4', successMessage)
+      notify('positive', successMessage)
       closeModal()
     })
     .catch((err) => {
-      notify('red-4', err.message)
+      notify('negative', err.message)
     })
 }
 
@@ -195,21 +188,11 @@ function deleteItem (item) {
   confirm('Are you sure you want to delete this item?') &&
     (usersStore.deleteUser(item.id)
       .then(() => {
-        usersStore.fetchUsers()
-        $q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: 'User deleted successfully'
-        })
+        fetchData({ pagination: serverPagination.value, filter: filter.value })
+        notify('positive', 'User deleted successfully')
       })
       .catch((err) => {
-        $q.notify({
-          color: 'red-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: err.message
-        })
+        notify('negative', err.message)
       }))
 }
 
@@ -229,30 +212,18 @@ function manageRoles (item) {
 function onSaveRoles (updatedRoles) {
   usersStore.updateUserRoles(editedItem.value.id, updatedRoles)
     .then(() => {
-      usersStore.fetchUsers()
-      $q.notify({
-        color: 'green-4',
-        textColor: 'white',
-        icon: 'cloud_done',
-        message: 'User roles updated successfully'
-      })
+      fetchData({ pagination: serverPagination.value, filter: filter.value })
+      notify('positive', 'User roles updated successfully')
     })
     .catch((err) => {
-      $q.notify({
-        color: 'red-4',
-        textColor: 'white',
-        icon: 'warning',
-        message: err.message
-      })
+      notify('negative', err.message)
     })
   showRolesDialog.value = false
 }
 
-const notify = (color, message) => {
+const notify = (type, message) => {
   $q.notify({
-    color,
-    textColor: 'white',
-    icon: color === 'green-4' ? 'cloud_done' : 'warning',
+    type,
     message
   })
 }
