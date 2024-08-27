@@ -80,7 +80,7 @@ const loading = ref(false)
 
 onMounted(() => {
   fetchData({ pagination: serverPagination.value, filter: filter.value })
-  rolesStore.fetchRoles()
+  rolesStore.fetch()
 })
 
 const rows = computed(() => usersStore.users || [])
@@ -89,7 +89,7 @@ const fetchData = async (props) => {
   const { pagination, filter } = props || {}
   loading.value = true
   try {
-    await usersStore.fetchUsersPaginated({
+    await usersStore.fetchPaginated({
       page: pagination?.page || serverPagination.value.page,
       rowsPerPage: pagination?.rowsPerPage || serverPagination.value.rowsPerPage,
       sortBy: pagination?.sortBy || serverPagination.value.sortBy,
@@ -160,8 +160,8 @@ function onSaveClick () {
   })
 
   const savePromise = isNewUser
-    ? usersStore.insertUser(userToSave)
-    : usersStore.updateUser(userToSave.id, userToSave)
+    ? usersStore.insert(userToSave)
+    : usersStore.update(userToSave.id, userToSave)
 
   savePromise
     .then(() => {
@@ -188,7 +188,7 @@ function editItem (item) {
 
 function deleteItem (item) {
   confirm('Are you sure you want to delete this item?') &&
-    (usersStore.deleteUser(item.id)
+    (usersStore.delete(item.id)
       .then(() => {
         fetchData({ pagination: serverPagination.value, filter: filter.value })
         notify('positive', 'User deleted successfully')
@@ -212,7 +212,7 @@ function manageRoles (item) {
 }
 
 function onSaveRoles (updatedRoles) {
-  usersStore.updateUserRoles(editedItem.value.id, updatedRoles)
+  usersStore.updateRoles(editedItem.value.id, updatedRoles)
     .then(() => {
       fetchData({ pagination: serverPagination.value, filter: filter.value })
       notify('positive', 'User roles updated successfully')

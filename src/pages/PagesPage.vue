@@ -53,7 +53,7 @@ const defaultItem = {
 }
 
 onMounted(() => {
-  pagesStore.fetchPages()
+  pagesStore.fetch()
 })
 
 const rows = computed(() => pagesStore.pages)
@@ -92,9 +92,9 @@ function handleAction ({ type, item }) {
 
 function onSaveClick (item) {
   if (editedIndex.value > -1) {
-    pagesStore.updatePage(item.id, item)
+    pagesStore.update(item.id, item)
       .then(() => {
-        pagesStore.fetchPages()
+        pagesStore.fetch()
         $q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -111,9 +111,9 @@ function onSaveClick (item) {
         })
       })
   } else {
-    pagesStore.insertPage(item)
+    pagesStore.insert(item)
       .then(() => {
-        pagesStore.fetchPages()
+        pagesStore.fetch()
         $q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -146,9 +146,9 @@ function editItem (item) {
 
 function deleteItem (item) {
   confirm('Are you sure you want to delete this page?') &&
-    pagesStore.deletePage(item.id)
+    pagesStore.delete(item.id)
       .then(() => {
-        pagesStore.fetchPages()
+        pagesStore.fetch()
         $q.notify({
           color: 'green-4',
           textColor: 'white',

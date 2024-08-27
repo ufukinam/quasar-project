@@ -11,14 +11,14 @@ export const useUsersStore = defineStore('users', {
     totalPages: 0
   }),
   actions: {
-    async fetchUsers () {
+    async fetch () {
       try {
         this.users = await get('/Users')
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
-    async fetchUsersPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
+    async fetchPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
       try {
         const response = await get('/Users/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
         this.users = response.items
@@ -30,7 +30,7 @@ export const useUsersStore = defineStore('users', {
         notify({ type: 'negative', message: error.message })
       }
     },
-    async insertUser (userData) {
+    async insert (userData) {
       try {
         const insertedUser = await post('/Users', userData)
         this.users = [insertedUser, ...this.users]
@@ -38,7 +38,7 @@ export const useUsersStore = defineStore('users', {
         notify({ type: 'negative', message: error.message })
       }
     },
-    async updateUser (userId, userData) {
+    async update (userId, userData) {
       try {
         if (userData.password === undefined) { userData.password = '' }
         const updatedUser = await put(`/Users/${userId}`, userData)
@@ -49,7 +49,7 @@ export const useUsersStore = defineStore('users', {
         notify({ type: 'negative', message: error.message })
       }
     },
-    async deleteUser (userId) {
+    async delete (userId) {
       try {
         await del(`/Users/${userId}`)
         this.users.filter(user => user.id !== userId)

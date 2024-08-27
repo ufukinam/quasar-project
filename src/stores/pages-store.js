@@ -1,42 +1,59 @@
 import { defineStore } from 'pinia'
 import { get, post, put, del } from '../utilty/api'
+import { notify } from '../utilty/notify'
 
 export const usePagesStore = defineStore('pages', {
   state: () => ({
-    pages: []
+    pages: [],
+    totalItems: 0,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0
   }),
   actions: {
-    async fetchPages () {
+    async fetch () {
       try {
         this.pages = await get('/Pages')
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
-    async insertPage (pageData) {
+    async fetchPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
+      try {
+        const response = await get('/Pages/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
+        this.pages = response.items
+        this.totalItems = response.totalItems
+        this.page = response.page
+        this.pageSize = response.pageSize
+        this.totalPages = response.potalPages
+      } catch (error) {
+        notify({ type: 'negative', message: error.message })
+      }
+    },
+    async insert (pageData) {
       try {
         const insertedPage = await post('/Pages', pageData)
         this.pages = [insertedPage, ...this.pages]
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
-    async updatePage (pageId, pageData) {
+    async update (pageId, pageData) {
       try {
         const updatedPage = await put(`/Pages/${pageId}`, pageData)
         this.pages = this.pages.map(page =>
           page.id === pageId ? updatedPage : page
         )
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
-    async deletePage (pageId) {
+    async delete (pageId) {
       try {
         await del(`/Pages/${pageId}`)
         this.pages = this.pages.filter(page => page.id !== pageId)
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     }
   }
