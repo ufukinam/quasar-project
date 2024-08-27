@@ -160,7 +160,6 @@ const filterModel = computed({
 })
 
 const onRequest = (propsNew) => {
-  console.log('onRequest called:', propsNew)
   const { pagination, filter } = propsNew
 
   // Update pagination model
@@ -194,7 +193,6 @@ const visibleColumnsList = computed(() =>
 )
 
 const onPaginationUpdate = (newPagination) => {
-  console.log('onPaginationUpdate called:', newPagination)
   paginationModel.value = newPagination
   emit('request', { pagination: paginationModel.value, filter: filterModel.value })
 }

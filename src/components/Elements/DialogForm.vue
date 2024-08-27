@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   title: {
@@ -82,10 +82,6 @@ const props = defineProps({
     type: String,
     default: 'Edit record'
   }
-})
-
-onMounted(() => {
-  console.log('dialog component mounted')
 })
 
 const emit = defineEmits(['save-click', 'close-click'])

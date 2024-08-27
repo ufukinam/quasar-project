@@ -39,12 +39,14 @@
 import { onMounted, computed, ref } from 'vue'
 import { useUsersStore } from 'src/stores/users-store'
 import { useRolesStore } from 'src/stores/roles-store'
-import { useQuasar } from 'quasar'
 import DialogForm from 'src/components/Elements/DialogForm.vue'
 import DataTable from 'src/components/Elements/DataTable.vue'
 import RolesManagementDialog from 'src/components/Elements/RolesManagementDialog.vue'
+import { useQuasar } from 'quasar'
+import { createNotify } from 'src/utilty/notify'
 
 const $q = useQuasar()
+const notify = createNotify($q)
 const usersStore = useUsersStore()
 const rolesStore = useRolesStore()
 
@@ -219,13 +221,6 @@ function onSaveRoles (updatedRoles) {
       notify('negative', err.message)
     })
   showRolesDialog.value = false
-}
-
-const notify = (type, message) => {
-  $q.notify({
-    type,
-    message
-  })
 }
 
 </script>

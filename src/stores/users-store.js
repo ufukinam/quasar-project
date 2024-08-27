@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { get, put, del, post } from '../utilty/api'
+import { notify } from '../utilty/notify'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
@@ -14,7 +15,7 @@ export const useUsersStore = defineStore('users', {
       try {
         this.users = await get('/Users')
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     async fetchUsersPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
@@ -26,7 +27,7 @@ export const useUsersStore = defineStore('users', {
         this.pageSize = response.pageSize
         this.totalPages = response.potalPages
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     async insertUser (userData) {
@@ -34,7 +35,7 @@ export const useUsersStore = defineStore('users', {
         const insertedUser = await post('/Users', userData)
         this.users = [insertedUser, ...this.users]
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     async updateUser (userId, userData) {
@@ -45,7 +46,7 @@ export const useUsersStore = defineStore('users', {
           user.id === userId ? updatedUser : user
         )
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     async deleteUser (userId) {
@@ -53,7 +54,7 @@ export const useUsersStore = defineStore('users', {
         await del(`/Users/${userId}`)
         this.users.filter(user => user.id !== userId)
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     }
   }
