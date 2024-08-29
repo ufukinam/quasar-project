@@ -59,7 +59,7 @@ const roles = ref([])
 const selectedRoles = ref([])
 
 onMounted(async () => {
-  await rolesStore.fetchRoles()
+  await rolesStore.fetch()
   roles.value = rolesStore.roles
   selectedRoles.value = props.user.roles.map(role => role.id)
 })

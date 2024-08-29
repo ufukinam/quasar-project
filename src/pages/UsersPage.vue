@@ -26,7 +26,7 @@
       />
     </div>
     <q-dialog v-model="showRolesDialog">
-      <RolesManagementDialog
+      <UserRolesDialog
         :user="editedItem"
         @save="onSaveRoles"
         @cancel="showRolesDialog = false"
@@ -41,9 +41,9 @@ import { useUsersStore } from 'src/stores/users-store'
 import { useRolesStore } from 'src/stores/roles-store'
 import DialogForm from 'src/components/Elements/DialogForm.vue'
 import DataTable from 'src/components/Elements/DataTable.vue'
-import RolesManagementDialog from 'src/components/Elements/RolesManagementDialog.vue'
 import { useQuasar } from 'quasar'
 import { createNotify } from 'src/utilty/notify'
+import UserRolesDialog from 'src/components/Elements/UserRolesDialog.vue'
 
 const $q = useQuasar()
 const notify = createNotify($q)

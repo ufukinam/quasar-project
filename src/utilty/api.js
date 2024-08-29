@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { useUserStore } from '../stores/user-store'
+import { useAuthStore } from '../stores/auth-store'
+import router from '../router' // Import your Vue Router instance
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:5264/api', // Base URL for your API
@@ -19,6 +21,18 @@ apiClient.interceptors.request.use(config => {
 }, error => {
   return Promise.reject(error)
 })
+
+// Response interceptor to handle unauthorized responses
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // Redirect to login page
+      router.push('/auth/login')
+    }
+    return Promise.reject(error)
+  }
+)
 
 export const get = async (url, params = {}) => {
   try {
@@ -60,8 +74,13 @@ const handleError = (error) => {
   console.error(error)
   if (error.response) {
     console.log(error.response.data.message)
+    if (error.response.status === 401) {
+      // Clear user data from store
+      const authStore = useAuthStore()
+      authStore.logout()
+    }
   } else {
     alert('An error occurred')
   }
-  throw error // Re-throw the error to handle it further up the call stack if necessary
+  throw error
 }
