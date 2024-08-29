@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { get } from '../utilty/api'
+import { usePagesStore } from './pages-store' // Add this import
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -30,8 +31,8 @@ export const useUserStore = defineStore('user', {
     },
     async fetchMenuItems () {
       try {
-        const menuItems = await get('/Pages')
-        this.menuItems = menuItems
+        const pagesStore = usePagesStore()
+        this.menuItems = await pagesStore.fetch()
       } catch (error) {
         console.error(error)
       }
@@ -40,7 +41,7 @@ export const useUserStore = defineStore('user', {
       const _this = this
       // Save the token to localStorage
       localStorage.setItem('token', token)
-
+      console.log('deneme')
       // Save the user to localStorage
       const stringifiedUser = JSON.stringify(user)
       localStorage.setItem('user', stringifiedUser)

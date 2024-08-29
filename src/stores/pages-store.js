@@ -13,7 +13,13 @@ export const usePagesStore = defineStore('pages', {
   actions: {
     async fetch () {
       try {
-        this.pages = await get('/Pages')
+        const response = await get('/Pages')
+        if (response.success) {
+          this.roles = response.data
+          return response.data
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
@@ -21,37 +27,54 @@ export const usePagesStore = defineStore('pages', {
     async fetchPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
       try {
         const response = await get('/Pages/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
-        this.pages = response.items
-        this.totalItems = response.totalItems
-        this.page = response.page
-        this.pageSize = response.pageSize
-        this.totalPages = response.potalPages
+        if (response.success) {
+          this.pages = response.data.items
+          this.totalItems = response.data.totalItems
+          this.page = response.data.page
+          this.pageSize = response.data.pageSize
+          this.totalPages = response.data.totalPages
+          return response.data.items
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
     async insert (pageData) {
       try {
-        const insertedPage = await post('/Pages', pageData)
-        this.pages = [insertedPage, ...this.pages]
+        const response = await post('/Pages', pageData)
+        if (response.success) {
+          this.pages = [response.data, ...this.pages]
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
     async update (pageId, pageData) {
       try {
-        const updatedPage = await put(`/Pages/${pageId}`, pageData)
-        this.pages = this.pages.map(page =>
-          page.id === pageId ? updatedPage : page
-        )
+        const response = await put(`/Pages/${pageId}`, pageData)
+        if (response.success) {
+          this.pages = this.pages.map(page =>
+            page.id === pageId ? response.data : page
+          )
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
     async delete (pageId) {
       try {
-        await del(`/Pages/${pageId}`)
-        this.pages = this.pages.filter(page => page.id !== pageId)
+        const response = await del(`/Pages/${pageId}`)
+        if (response.success) {
+          this.pages = this.pages.filter(page => page.id !== pageId)
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }

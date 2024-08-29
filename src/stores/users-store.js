@@ -13,7 +13,13 @@ export const useUsersStore = defineStore('users', {
   actions: {
     async fetch () {
       try {
-        this.users = await get('/Users')
+        const response = await get('/Users')
+        if (response.success) {
+          this.users = response.data
+          return response.data
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
@@ -21,19 +27,29 @@ export const useUsersStore = defineStore('users', {
     async fetchPaginated ({ page, rowsPerPage, sortBy, descending, filter }) {
       try {
         const response = await get('/Users/paginated', { Page: page, RowsPerPage: rowsPerPage, SortBy: sortBy, Descending: descending, strFilter: filter })
-        this.users = response.items
-        this.totalItems = response.totalItems
-        this.page = response.page
-        this.pageSize = response.pageSize
-        this.totalPages = response.potalPages
+        if (response.success) {
+          this.users = response.data.items
+          this.totalItems = response.data.totalItems
+          this.page = response.data.page
+          this.pageSize = response.data.pageSize
+          this.totalPages = response.data.totalPages
+          return response.data.items
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
     async insert (userData) {
       try {
-        const insertedUser = await post('/Users', userData)
-        this.users = [insertedUser, ...this.users]
+        const response = await post('/Users', userData)
+        if (response.success) {
+          this.users = [response.data, ...this.users]
+        } else {
+          notify({ type: 'negative', message: response.message })
+          return response.data
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
@@ -41,18 +57,26 @@ export const useUsersStore = defineStore('users', {
     async update (userId, userData) {
       try {
         if (userData.password === undefined) { userData.password = '' }
-        const updatedUser = await put(`/Users/${userId}`, userData)
-        this.users = this.users.map(user =>
-          user.id === userId ? updatedUser : user
-        )
+        const response = await put(`/Users/${userId}`, userData)
+        if (response.success) {
+          this.users = this.users.map(user =>
+            user.id === userId ? response.data : user
+          )
+        } else {
+          notify({ type: 'negative', message: response.Message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }
     },
     async delete (userId) {
       try {
-        await del(`/Users/${userId}`)
-        this.users.filter(user => user.id !== userId)
+        const response = await del(`/Users/${userId}`)
+        if (response.success) {
+          this.users.filter(user => user.id !== userId)
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
         notify({ type: 'negative', message: error.message })
       }

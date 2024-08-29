@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useUserStore } from './user-store'
 import { post } from '../utilty/api'
+import { notify } from '../utilty/notify'
 
 export const useAuthStore = defineStore({
   id: 'auth',
@@ -12,30 +13,39 @@ export const useAuthStore = defineStore({
   actions: {
     async register (rName, rSurname, rEmail, rPassword) {
       try {
-        const data = await post('/Auth/register', {
+        const response = await post('/Auth/register', {
           name: rName,
           surname: rSurname,
           email: rEmail,
           password: rPassword
         })
-        const userStore = useUserStore()
-        userStore.storeLoggedInUser(data.token, data.user)
-        this.router.push('/')
+        if (response.success) {
+          const userStore = useUserStore()
+          userStore.storeLoggedInUser(response.data.token, response.data.user)
+          this.router.push('/')
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     async login (loginMail, loginPassword) {
       try {
-        const data = await post('/Auth/login', {
+        const response = await post('/Auth/login', {
           email: loginMail,
           password: loginPassword
         })
-        const userStore = useUserStore()
-        userStore.storeLoggedInUser(data.token, data.user)
-        this.router.push('/')
+        console.log(JSON.stringify(response))
+        if (response.success) {
+          const userStore = useUserStore()
+          userStore.storeLoggedInUser(response.data.token, response.data.user)
+          this.router.push('/')
+        } else {
+          notify({ type: 'negative', message: response.message })
+        }
       } catch (error) {
-        console.error(error)
+        notify({ type: 'negative', message: error.message })
       }
     },
     logout () {
